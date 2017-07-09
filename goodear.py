@@ -20,6 +20,7 @@
 
 import curses as cs
 import random
+from functools import partial
 from pyglet.media import *
 from sys import argv
 
@@ -53,11 +54,8 @@ class Clip:
     def seek(self, time):
         self.player.seek(time)
 
-
-global clipA
-global clipB
-global clipX
 global playing
+
 
 def pause():
     global playing
@@ -73,27 +71,18 @@ def play(clip):
     playing = clip
     playing.play()
 
-def playA():
-    play(clipA)
 
-def playB():
-    play(clipB)
-
-def playX():
-    play(clipX)
-
-
+# key handlers
 actions = {
-    'a': playA,
-    'b': playB,
-    'x': playX,
+    'a': None, # partial(play, clipA)
+    'b': None, # partial(play, clipB)
+    'x': None, # partial(play, clipX)
     'p': pause,
     '[': '<rewind>',
     ']': '<forward>',
     's': '<show stats>',
 }
 
-# left <-> right arrows select "a == x" or "b == x"
 def layout(stdscr):
     stdscr.clear()
 
@@ -149,14 +138,20 @@ if __name__ == "__main__":
 
     clips = [clipA, clipB]
     clipX = random.choice(clips)
+    playing = None
 
+    # bind action handlers
+    actions['a'] = partial(play, clipA)
+    actions['b'] = partial(play, clipB)
+    actions['x'] = partial(play, clipX)
+
+    # setup screen
     stdscr = cs.initscr()
     cs.noecho()
     cs.cbreak()
-
     layout(stdscr)
 
-    playing = None
+    # main loop
 
     while True:
         key = stdscr.getch()
